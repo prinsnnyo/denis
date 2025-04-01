@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NVM-ENT</title>
+    <style>
+        @keyframes fall {
+            from { transform: translateY(-100%); }
+            to { transform: translateY(100vh); }
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: black;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            position: relative;
+        }
+        .binary {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            font-size: 18px;
+            color: #00FF00;
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        .binary span {
+            position: absolute;
+            top: -10px;
+            animation: fall linear infinite;
+        }
+        .container {
+            position: relative;
+            z-index: 2;
+            max-width: 420px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0px 5px 15px rgba(0, 255, 0, 0.3);
+            text-align: center;
+        }
+        h1 {
+            color: #00FF00;
+            margin-bottom: 10px;
+        }
+        h2 {
+            color: #aaa;
+            font-size: 1.2em;
+        }
+        label {
+            font-weight: bold;
+            display: block;
+            margin: 15px 0 8px;
+            color: #ddd;
+        }
+        input[type="file"] {
+            display: block;
+            margin: 10px auto;
+            padding: 10px;
+            border: 1px solid #00FF00;
+            border-radius: 5px;
+            width: 100%;
+            cursor: pointer;
+            background: black;
+            color: white;
+        }
+        button {
+            background-color: #00FF00;
+            color: black;
+            border: none;
+            padding: 12px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background 0.3s ease;
+            width: 100%;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #008000;
+        }
+        .webcam-btn {
+            display: block;
+            text-decoration: none;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="binary"></div>
+    <script>
+        const binaryContainer = document.querySelector(".binary");
+        for (let i = 0; i < 100; i++) {
+            let span = document.createElement("span");
+            span.innerText = Math.random() > 0.5 ? "1" : "0";
+            span.style.left = Math.random() * 100 + "vw";
+            span.style.animationDuration = (Math.random() * 3 + 2) + "s";
+            binaryContainer.appendChild(span);
+        }
+    </script>
+    <div class="container">
+        <h1>NVM-ENT</h1>
+        <h2>Choose an Option:</h2>
+        <form action="/upload" method="post" enctype="multipart/form-data">
+            <label for="file">Upload an image or video:</label>
+            <input type="file" name="file" id="file" accept="image/*,video/*">
+            <button type="submit">Upload</button>
+        </form>
+        <a href="/camera" class="webcam-btn">
+            <button>Webcam Tracking</button>
+        </a>
+    </div>
+</body>
+</html>
