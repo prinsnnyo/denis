@@ -3,10 +3,9 @@ import cv2
 from flask import Flask, render_template, request, redirect, url_for, send_file, Response
 from werkzeug.utils import secure_filename
 
-# Initialize Flask app
+
 app = Flask(__name__)
 
-# Set upload folder and allowed extensions
 UPLOAD_FOLDER = 'uploads'
 PROCESSED_FOLDER = 'processed'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'mp4'}
@@ -14,54 +13,53 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'mp4'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['PROCESSED_FOLDER'] = PROCESSED_FOLDER
 
-# Ensure upload and processed folders exist
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(PROCESSED_FOLDER, exist_ok=True)
 
-# Load Haar cascades
 face_cascade = cv2.CascadeClassifier(r'haarcascades/haarcascade_frontalface_default.xml')
 eye_cascade = cv2.CascadeClassifier(r'haarcascades/haarcascade_eye.xml')
 mouth_cascade = cv2.CascadeClassifier(r'haarcascades/haarcascade_mcs_mouth.xml')
 body_cascade = cv2.CascadeClassifier(r'haarcascades/haarcascade_fullbody.xml')
-upper_body_cascade = cv2.CascadeClassifier(r'haarcascades/haarcascade_upperbody.xml')  # For partial body detection
+upper_body_cascade = cv2.CascadeClassifier(r'haarcascades/haarcascade_upperbody.xml')  
 
 def allowed_file(filename):
-    """Check if the uploaded file has an allowed extension."""
+
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def process_frame(frame):
-    """Process a single frame to detect face, eyes, mouth, full body, and partial body."""
+    
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-    # Improve contrast using histogram equalization
     gray = cv2.equalizeHist(gray)
 
-    # Detect faces
     faces = face_cascade.detectMultiScale(gray, scaleFactor=1.2, minNeighbors=3, minSize=(30, 30))
     for (x, y, w, h) in faces:
         cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
 
-        # Region of interest for eyes and mouth
         roi_gray = gray[y:y + h, x:x + w]
         roi_color = frame[y:y + h, x:x + w]
 
-        # Detect eyes
         eyes = eye_cascade.detectMultiScale(roi_gray, scaleFactor=1.05, minNeighbors=5, minSize=(15, 15))
         for (ex, ey, ew, eh) in eyes:
             cv2.rectangle(roi_color, (ex, ey), (ex + ew, ey + eh), (0, 255, 0), 2)
 
-        # Detect mouth
+        eyeglasses_cascade = cv2.CascadeClassifier(r'haarcascades/haarcascade_eye_tree_eyeglasses.xml')
+        if not eyeglasses_cascade.empty():
+            eyes_with_glasses = eyeglasses_cascade.detectMultiScale(roi_gray, scaleFactor=1.05, minNeighbors=5, minSize=(15, 15))
+            for (ex, ey, ew, eh) in eyes_with_glasses:
+                cv2.rectangle(roi_color, (ex, ey), (ex + ew, ey + eh), (255, 255, 0), 2)  # Yellow for glasses
+
         mouths = mouth_cascade.detectMultiScale(roi_gray, scaleFactor=1.2, minNeighbors=10, minSize=(30, 30))
         for (mx, my, mw, mh) in mouths:
-            if my > h // 2:  # Mouth is usually in the lower half of the face
+            if my > h // 2:  
                 cv2.rectangle(roi_color, (mx, my), (mx + mw, my + mh), (0, 0, 255), 2)
 
-    # Detect full body
-    bodies = body_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(50, 100))
-    for (bx, by, bw, bh) in bodies:
-        cv2.rectangle(frame, (bx, by), (bx + bw, by + bh), (255, 255, 0), 2)
+  
+    # bodies = body_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(50, 100))
+    # for (bx, by, bw, bh) in bodies:
+    #     cv2.rectangle(frame, (bx, by), (bx + bw, by + bh), (255, 255, 0), 2)
 
-    # Detect partial (upper) body
+    # Detect upper body
     upper_bodies = upper_body_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(50, 50))
     for (ux, uy, uw, uh) in upper_bodies:
         cv2.rectangle(frame, (ux, uy), (ux + uw, uy + uh), (0, 255, 255), 2)
@@ -69,7 +67,7 @@ def process_frame(frame):
     return frame
 
 def process_image(image_path):
-    """Process an image file and save the result."""
+    
     frame = cv2.imread(image_path)
     if frame is None:
         return None
@@ -83,7 +81,7 @@ def process_image(image_path):
     return processed_path
 
 def process_video(video_path):
-    """Process a video file and return a generator for streaming."""
+   
     cap = cv2.VideoCapture(video_path)
     while cap.isOpened():
         ret, frame = cap.read()
@@ -112,12 +110,12 @@ def gen_camera():
 
 @app.route('/')
 def index():
-    """Render the homepage."""
+   
     return render_template('index.html')
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
-    """Handle file upload and processing."""
+   
     if 'file' not in request.files:
         return redirect(request.url)
     file = request.files['file']
